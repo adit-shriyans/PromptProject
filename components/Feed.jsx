@@ -11,7 +11,7 @@ const PromptCardList = ({ data, handleTagClick }) => {
         <PromptCard
           key={post._id}
           post={post}
-          handleTagClick
+          handleTagClick={handleTagClick}
         />
       ))}
     </div>
@@ -20,16 +20,31 @@ const PromptCardList = ({ data, handleTagClick }) => {
 
 const Feed = () => {
   const [searchText, setSearchText] = useState('');
+  const [searchResult, setSearchResult] = useState([]);
   const [posts, setPosts] = useState([]);
 
-  const handleSearchChange = (e) => {
+  const postContentSearch = (keyword) => {
+    const contentSearchResult = posts.filter( post => post.prompt.includes(keyword));
+    const tagSearchPosts = posts.filter( post => post.tag.includes(keyword));
+    const userResult = posts.filter( post => post.creator.username===keyword.toLowerCase());
+    const feedPosts = Array.from(new Set([...contentSearchResult, ...tagSearchPosts, ...userResult]));
+    setSearchResult(feedPosts);
+  }
 
+  const handleSearchChange = (e) => {
+    setSearchText(e.target.value);
+    postContentSearch(e.target.value);
+  }
+
+  const handleTagClick = (tag) => {
+    setSearchText(tag);
+    const tagSearchPosts = posts.filter( post => post.tag.includes(tag));
+    setSearchResult(tagSearchPosts);
   }
 
   const fetchPrompts = async () => {
     const response = await fetch('/api/prompt');
     const data = await response.json();
-
     setPosts(data);
   }
 
@@ -52,8 +67,8 @@ const Feed = () => {
       </form>
 
       <PromptCardList
-        data={posts} 
-        handleTagClick={() => {}}
+        data={searchText?searchResult:posts} 
+        handleTagClick={handleTagClick}
       />
     </section>
   )
